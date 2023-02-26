@@ -1,9 +1,11 @@
+import model.Model;
+import model.entity.NoteEnglish;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Controller implements StringConstatnts {
@@ -15,18 +17,20 @@ public class Controller implements StringConstatnts {
         this.view = view;
     }
 
-    private final List<String> listBase = readData(pathBase);
-
-    public void processingSubtitlesWords() throws IOException {
+       public void processingSubtitlesWords() throws IOException {
         List<String> listEng = readData(pathEng);
-        List<String> listWithoutTimming = getLineWithoutTimming(listEng);
+        List<String> lineWithoutTiming = getLineWithoutTiming(listEng);
 
-        writerFileTranslated(listWithoutTimming, pathEngCorrect);
+        writerFileTranslated(lineWithoutTiming, pathEngCorrect);
+
         List<String> listEngCorrect = readData(pathEngCorrect);
-        List<String> listWordsCorrect = getWords(listEngCorrect);
+
+        List<String> listWordsCorrect = getWords(model.getListFromBase(),listEngCorrect);
+
         writerFile(listWordsCorrect, pathENGWords);
-        List<String> listBaseSorted = listBase.stream().collect(Collectors.toCollection(TreeSet::new)).stream().map(e -> e + "\n").toList();
-        writerFile(listBaseSorted, pathBase);
+
+        model.writeJDBC(listWordsCorrect);
+
     }
 
     private List<String> readData(String path) {
@@ -39,11 +43,11 @@ public class Controller implements StringConstatnts {
         return lines;
     }
 
-    private List<String> getLineWithoutTimming(List<String> list) {
+    private List<String> getLineWithoutTiming(List<String> list) {
         return list.stream()
                 .filter(e -> !e.isEmpty())
                 .filter(e -> !e.matches("[0-9:.->\\W]+"))
-                .map(Controller::addSpace)
+                .map(e -> e + " ")
                 .toList();
 
     }
@@ -75,26 +79,27 @@ public class Controller implements StringConstatnts {
         return e + " ";
     }
 
-    private List<String> getWords(List<String> listLine1) {
+    private List<String> getWords(List<NoteEnglish> listNote, List<String> listLine1) {
         Set<String> set = new TreeSet<>();
         for (String s : listLine1) {
             for (String s1 : s.split(" ")) {
-                String line = getNewWord((removeX(s1))).toLowerCase(Locale.ROOT);
+                String line = getNewWord(listNote, (removeX(s1))).toLowerCase(Locale.ROOT);
                 set.add(line);
             }
         }
         return set.stream().map(x -> x + "\n").toList();
     }
 
-    private String getNewWord(String removeX) {
+    private String getNewWord(List<NoteEnglish> listNote, String removeX) {
         String finalRemoveX = removeX;
-        if (listBase.stream().anyMatch(x -> x.equalsIgnoreCase(finalRemoveX))) {
+        if (listNote.stream().anyMatch(x -> x.getWord().equalsIgnoreCase(finalRemoveX))) {
             removeX = "@";
         }
         return removeX;
     }
 
     private static String removeX(String x) {
+        System.out.print(x);
         StringBuilder sb = new StringBuilder(x);
         if (sb.indexOf(",") > 0
                 || sb.indexOf(".") >= 0
@@ -106,6 +111,7 @@ public class Controller implements StringConstatnts {
                 || sb.indexOf(")") >= 0
                 || sb.indexOf("(") >= 0) {
             x = getCorrectWord(x);
+            System.out.println(" -->                     " + x);
         }
         return x;
     }
