@@ -2,7 +2,6 @@ package model.DAO.impl;
 
 import model.DAO.NoteEnglishDAO;
 import model.entity.NoteEnglish;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

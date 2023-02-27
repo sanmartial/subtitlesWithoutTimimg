@@ -1,3 +1,5 @@
+package view;
+
 public interface StringConstatnts {
     String pathBase = "C:\\Users\\globa\\OneDrive\\Рабочий стол\\BaseWords.txt";
     String pathENGWords = "C:\\Users\\globa\\OneDrive\\Рабочий стол\\ENGWords.txt";
